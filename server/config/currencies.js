@@ -6,7 +6,7 @@ const axios = require('axios');
 const admin = require('firebase-admin');
 const EventEmitter = require('events');
 
-const serviceAccount = require('./arbitrage-a81cf-firebase-adminsdk-s0gzk-6ea4b36985');
+// const serviceAccount = require('./arbitrage-a81cf-firebase-adminsdk-s0gzk-6ea4b36985');
 
 class MyEmitter extends EventEmitter {}
 
