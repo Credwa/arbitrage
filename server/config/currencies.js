@@ -11,7 +11,7 @@ const EventEmitter = require('events');
 class MyEmitter extends EventEmitter {}
 
 const myEmitter = new MyEmitter();
-
+console.log(process.env.private_key);
 admin.initializeApp({
   credential: admin.credential.cert({
     projectId: process.env.project_id,
@@ -21,7 +21,6 @@ admin.initializeApp({
   databaseURL: process.env.database_URL
 });
 
-console.log(process.env.private_key);
 const db = admin.database();
 let refArgentina = db.ref('arbitrage/argentine-pesos');
 let refMexico = db.ref('arbitrage/mexican-pesos');
