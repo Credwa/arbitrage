@@ -6,7 +6,7 @@ const axios = require('axios');
 const admin = require('firebase-admin');
 const EventEmitter = require('events');
 
-// const serviceAccount = require('./arbitrage-a81cf-firebase-adminsdk-s0gzk-6ea4b36985');
+const serviceAccount = require('./arbitrage-a81cf-firebase-adminsdk-s0gzk-6ea4b36985');
 
 class MyEmitter extends EventEmitter {}
 
@@ -34,27 +34,27 @@ const currencies = [
   {
     name: 'bitcoin',
     symbol: 'btc',
-    cron: '1-51/10 * * * *'
+    cron: '1,11,21,31,41,51 * * * *'
   },
   {
     name: 'ripple',
     symbol: 'xrp',
-    cron: '3-53/10 * * * *'
+    cron: '3,13,23,33,43,53 * * * *'
   },
   {
     name: 'ethereum',
     symbol: 'eth',
-    cron: '5-55/10 * * * *'
+    cron: '5,15,25,35,45,55 * * * *'
   },
   {
     name: 'bitcoin-cash',
     symbol: 'bch',
-    cron: '7-57/10 * * * *'
+    cron: '7,17,27,37,47,57 * * * *'
   },
   {
     name: 'litecoin',
     symbol: 'ltc',
-    cron: '9-59/10 * * * *'
+    cron: '9,19,29,39,49,59 * * * *'
   }
 ];
 
