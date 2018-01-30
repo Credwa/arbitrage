@@ -186,7 +186,7 @@ let makeCoinDataReq = (coin, symbol) => {
       }
     })
     .catch(e => {
-      console.log(e);
+      console.log('error', e);
     });
 };
 
