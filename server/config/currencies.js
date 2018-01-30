@@ -20,6 +20,8 @@ admin.initializeApp({
   }),
   databaseURL: process.env.database_URL
 });
+
+console.log(process.env.private_key);
 const db = admin.database();
 let refArgentina = db.ref('arbitrage/argentine-pesos');
 let refMexico = db.ref('arbitrage/mexican-pesos');
