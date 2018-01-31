@@ -11,7 +11,6 @@ const EventEmitter = require('events');
 class MyEmitter extends EventEmitter {}
 
 const myEmitter = new MyEmitter();
-console.log(process.env.private_key);
 admin.initializeApp({
   credential: admin.credential.cert({
     projectId: process.env.project_id,
@@ -28,7 +27,7 @@ let refMexico = db.ref('arbitrage/mexican-pesos');
 // Mexican Peso
 let MXNPesoExchangeRate = null;
 
-//
+// Argentine Peso
 let ARSPesoExchangeRate = null;
 
 const currencies = [
@@ -98,6 +97,7 @@ let setarbitrageData = (exchangeRate, coinMarketCapData, lastTradePrice, foreign
     foreignCurrency: null,
     exchange: null,
     symbol: null,
+    exchangeRate: exchangeRate,
     USDPrice: 0,
     priceInPesos: 0,
     foreignExchangePrice: 0,
@@ -202,5 +202,7 @@ let startCrons = () => {
 
 module.exports = {
   startCrons,
-  myEmitter
+  myEmitter,
+  refArgentina,
+  refMexico
 };
