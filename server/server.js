@@ -32,6 +32,13 @@ let findLatestSymbolData = (arr) => {
   return latest;
 };
 
+app.use(function (req, res, next) {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,PATCH,DELETE');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+});
+
 app.get('/latest/ARS', (req, res) => {
   currencies.refArgentina.once('value', (data) => {
     let argentinaPesosData = data.val();
