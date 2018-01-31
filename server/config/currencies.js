@@ -5,9 +5,11 @@ const cron = require('node-cron');
 const axios = require('axios');
 const admin = require('firebase-admin');
 const EventEmitter = require('events');
-
+const moment = require('moment');
 // const serviceAccount = require('./arbitrage-a81cf-firebase-adminsdk-s0gzk-6ea4b36985');
-
+let temp = moment.now();
+console.log(moment(temp).format('hh:mm'));
+console.log(moment.now());
 class MyEmitter extends EventEmitter {}
 
 const myEmitter = new MyEmitter();
@@ -132,7 +134,7 @@ let setarbitrageData = (exchangeRate, coinMarketCapData, lastTradePrice, foreign
     ),
     coinMarketCapData[0].price_usd
   );
-  arbitrage.time = coinMarketCapData[0].last_updated;
+  arbitrage.time = moment.now();
   myEmitter.emit('newArbitrage', arbitrage);
   return arbitrage;
 };
