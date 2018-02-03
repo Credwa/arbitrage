@@ -1,15 +1,17 @@
 require('./config.js');
 
 const cron = require('node-cron');
-// const { Coin } = require('../models/coin');
 const axios = require('axios');
 const admin = require('firebase-admin');
 const EventEmitter = require('events');
 const moment = require('moment');
+const cheerio = require('cheerio');
 
 class MyEmitter extends EventEmitter {}
 
 const myEmitter = new MyEmitter();
+
+// firebase DB Setup
 admin.initializeApp({
   credential: admin.credential.cert({
     projectId: process.env.project_id,
@@ -20,8 +22,8 @@ admin.initializeApp({
 });
 
 const db = admin.database();
-let refArgentina = db.ref('arbitrage/argentine-pesos');
-let refMexico = db.ref('arbitrage/mexican-pesos');
+let refArgentina = db.ref(`${process.env.arbitrage_db_name}/argentine-pesos`);
+let refMexico = db.ref(`${process.env.arbitrage_db_name}/mexican-pesos`);
 
 // Mexican Peso
 let MXNPesoExchangeRate = null;
@@ -59,10 +61,33 @@ const currencies = [
 
 let getLatestExchangeRates = () => {
   axios
-    .get('http://www.apilayer.net/api/live?access_key=00be7e086b3ce94f527952b7e9db77e5&currencies=MXN,ARS')
+    .get('https://www.hsbc.com.mx/1/2/es/personas/divisas')
     .then(data => {
-      MXNPesoExchangeRate = data.data.quotes.USDMXN;
-      ARSPesoExchangeRate = data.data.quotes.USDARS;
+      let $ = cheerio.load(data.data);
+      // console.log($.xml());
+      MXNPesoExchangeRate = $('tbody > tr')
+        .first()
+        .text()
+        .replace(/\s/g, '')
+        .split('$')[2];
+    })
+    .catch(e => {
+      console.log(e);
+    });
+
+  axios
+    .get('http://www.bna.com.ar/')
+    .then(data => {
+      let $ = cheerio.load(data.data);
+
+      let pull = $('#divisas')
+        .first()
+        .text()
+        .replace(/\s\s+/g, ' ');
+
+      ARSPesoExchangeRate = pull
+        .substr(pull.indexOf('U.S.A'), 21)
+        .split(' ')[2];
     })
     .catch(e => {
       console.log(e);
@@ -71,7 +96,7 @@ let getLatestExchangeRates = () => {
 
 getLatestExchangeRates();
 
-cron.schedule('*/60 * * * *', () => {
+cron.schedule('*/3 * * * *', () => {
   getLatestExchangeRates();
 });
 
@@ -88,10 +113,16 @@ let getSpread = (foreignExchangePriceUSD, priceUSD) => {
 };
 
 let getSpreadPercentage = (spread, priceUSD) => {
-  return parseFloat(spread / priceUSD);
+  return parseFloat((spread / priceUSD) * 100);
 };
 
-let setarbitrageData = (exchangeRate, coinMarketCapData, lastTradePrice, foreignCurrency, exchange) => {
+let setarbitrageData = (
+  exchangeRate,
+  coinMarketCapData,
+  lastTradePrice,
+  foreignCurrency,
+  exchange
+) => {
   let arbitrage = {
     foreignCurrency: null,
     exchange: null,
@@ -123,10 +154,7 @@ let setarbitrageData = (exchangeRate, coinMarketCapData, lastTradePrice, foreign
   );
   arbitrage.spreadPercentage = getSpreadPercentage(
     getSpread(
-      getForeignExchangePriceUSD(
-        lastTradePrice,
-        exchangeRate
-      ),
+      getForeignExchangePriceUSD(lastTradePrice, exchangeRate),
       coinMarketCapData[0].price_usd
     ),
     coinMarketCapData[0].price_usd
@@ -142,8 +170,17 @@ let makeReqMXNExchangeRates = (symbol, coinMarketCapData) => {
       .get(`https://bitpay.com/rates/${symbol.toUpperCase()}/MXN`)
       .then(data => {
         let reqData = data.data.data;
-        refMexico.push(setarbitrageData(MXNPesoExchangeRate, coinMarketCapData, reqData.rate, 'Mexican Pesos', 'https://Bitpay.com'));
-      }).catch(e => {
+        refMexico.push(
+          setarbitrageData(
+            MXNPesoExchangeRate,
+            coinMarketCapData,
+            reqData.rate,
+            'Mexican Pesos',
+            'https://Bitpay.com'
+          )
+        );
+      })
+      .catch(e => {
         console.log(e);
       });
   } else {
@@ -151,8 +188,17 @@ let makeReqMXNExchangeRates = (symbol, coinMarketCapData) => {
       .get(`https://api.bitso.com/v3/ticker?book=${symbol}_mxn`)
       .then(data => {
         let reqData = data.data;
-        refMexico.push(setarbitrageData(MXNPesoExchangeRate, coinMarketCapData, reqData.payload.last, 'Mexican Pesos', 'https://bitso.com'));
-      }).catch(e => {
+        refMexico.push(
+          setarbitrageData(
+            MXNPesoExchangeRate,
+            coinMarketCapData,
+            reqData.payload.last,
+            'Mexican Pesos',
+            'https://bitso.com'
+          )
+        );
+      })
+      .catch(e => {
         console.log(e);
       });
   }
@@ -160,17 +206,36 @@ let makeReqMXNExchangeRates = (symbol, coinMarketCapData) => {
 
 let makeReqARSExchangeRates = (symbol, coinMarketCapData) => {
   if (symbol === 'eth') {
-    axios.get('https://api.cryptomkt.com/v1/ticker?market=ETHARS').then(data => {
-      let reqData = data.data.data[0];
-      refArgentina.push(setarbitrageData(ARSPesoExchangeRate, coinMarketCapData, reqData.last_price, 'Argentine Pesos', 'cryptomkt.com'));
-    }).catch(e => {
-      console.log(e);
-    });
+    axios
+      .get('https://api.cryptomkt.com/v1/ticker?market=ETHARS')
+      .then(data => {
+        let reqData = data.data.data[0];
+        refArgentina.push(
+          setarbitrageData(
+            ARSPesoExchangeRate,
+            coinMarketCapData,
+            reqData.last_price,
+            'Argentine Pesos',
+            'cryptomkt.com'
+          )
+        );
+      })
+      .catch(e => {
+        console.log(e);
+      });
   }
   if (symbol === 'btc') {
     axios.get('https://bitpay.com/rates/BTC/ARS').then(data => {
       let reqData = data.data.data;
-      refArgentina.push(setarbitrageData(ARSPesoExchangeRate, coinMarketCapData, reqData.rate, 'Argentine Pesos', 'bitpay.com'));
+      refArgentina.push(
+        setarbitrageData(
+          ARSPesoExchangeRate,
+          coinMarketCapData,
+          reqData.rate,
+          'Argentine Pesos',
+          'bitpay.com'
+        )
+      );
     });
   }
 };

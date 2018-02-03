@@ -1,7 +1,6 @@
 const http = require('http');
 const express = require('express');
 const socketIO = require('socket.io');
-const moment = require('moment');
 
 // const { mongoose } = require('./db/mongoose');
 
@@ -18,15 +17,17 @@ let findLatestSymbolData = arr => {
   let found = [];
   let latest = [];
   for (let i = arr.length - 1; i >= 0; i--) {
-    let isAlreadyFound = false;
-    for (let j = 0; j < found.length; j++) {
-      if (arr[i].symbol === found[j]) {
-        isAlreadyFound = true;
+    if (latest.length < 5) {
+      let isAlreadyFound = false;
+      for (let j = 0; j < found.length; j++) {
+        if (arr[i].symbol === found[j]) {
+          isAlreadyFound = true;
+        }
       }
-    }
-    if (!isAlreadyFound) {
-      found.push(arr[i].symbol);
-      latest.push(arr[i]);
+      if (!isAlreadyFound) {
+        found.push(arr[i].symbol);
+        latest.push(arr[i]);
+      }
     }
   }
   return latest;
@@ -84,7 +85,11 @@ app.get('/historical/:symbol/:foreignExchange', (req, res) => {
       .once('value', data => {
         res.send(data.val());
       });
-  } else if (req.params.foreignExchange.toUpperCase() === 'ARS' && (req.params.symbol.toUpperCase() === 'BTC' || req.params.symbol.toUpperCase() === 'ETH')) {
+  } else if (
+    req.params.foreignExchange.toUpperCase() === 'ARS' &&
+    (req.params.symbol.toUpperCase() === 'BTC' ||
+      req.params.symbol.toUpperCase() === 'ETH')
+  ) {
     currencies.refArgentina
       .orderByChild('symbol')
       .equalTo(req.params.symbol)
