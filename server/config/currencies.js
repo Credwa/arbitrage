@@ -35,27 +35,27 @@ const currencies = [
   {
     name: 'bitcoin',
     symbol: 'btc',
-    cron: '1,11,21,31,41,51 * * * *'
+    cron: '1,31 * * * *'
   },
   {
     name: 'ripple',
     symbol: 'xrp',
-    cron: '3,13,23,33,43,53 * * * *'
+    cron: '3,33 * * * *'
   },
   {
     name: 'ethereum',
     symbol: 'eth',
-    cron: '5,15,25,35,45,55 * * * *'
+    cron: '5,35 * * * *'
   },
   {
     name: 'bitcoin-cash',
     symbol: 'bch',
-    cron: '7,17,27,37,47,57 * * * *'
+    cron: '7,37 * * * *'
   },
   {
     name: 'litecoin',
     symbol: 'ltc',
-    cron: '9,19,29,39,49,59 * * * *'
+    cron: '9,39 * * * *'
   }
 ];
 
