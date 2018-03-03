@@ -60,6 +60,23 @@ app.get('/latest/ARS', (req, res) => {
   });
 });
 
+app.get('/latest/AUD', (req, res) => {
+  currencies.refAustrailia.once('value', data => {
+    let AUDData = data.val();
+    let ausArr = [];
+    for (data in AUDData) {
+      ausArr.push(AUDData[data]);
+    }
+    res.send([
+      ...findLatestSymbolData(
+        ausArr.sort((a, b) => {
+          return a.time > b.time ? 1 : b.time > a.time ? -1 : 0;
+        })
+      )
+    ]);
+  });
+});
+
 app.get('/latest/MXN', (req, res) => {
   currencies.refMexico.once('value', data => {
     let mexicoPesosData = data.val();
@@ -96,6 +113,16 @@ app.get('/historical/:symbol/:foreignExchange', (req, res) => {
       .once('value', data => {
         res.send(data.val());
       });
+  } else if (req.params.foreignExchange.toUpperCase() === 'AUD') {
+    let sym = req.params.symbol.toUpperCase();
+    if (sym === 'BTC' || sym === 'ETC' || sym === 'BCH') {
+      currencies.refAustrailia
+        .orderByChild('symbol')
+        .equalTo(req.params.symbol)
+        .once('value', data => {
+          res.send(data.val());
+        });
+    }
   } else {
     res.status(404).send();
   }
@@ -106,7 +133,7 @@ io.on('connection', socket => {
     socket.emit('newArbitrage', arbitrage);
   });
   socket.on('disconnect', () => {
-    console.log('Disconnected from server');
+    console.log('User Disconnected from server');
   });
 });
 

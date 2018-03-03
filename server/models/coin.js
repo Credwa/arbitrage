@@ -10,7 +10,7 @@ let Coin = mongoose.model('Coin', {
     required: true,
     default: null
   },
-  priceInPesos: {
+  priceInForeignCurrency: {
     type: Number,
     required: true,
     default: null
