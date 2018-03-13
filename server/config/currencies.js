@@ -116,7 +116,7 @@ let checkCurrentTimeToStoreData = () => {
   // check if time is from 0 to 10 min of the hour and store data if true
   let now = moment();
   let currentTime = Number(now.format('m'));
-  if (currentTime >= 30 && currentTime <= 40) {
+  if (currentTime >= 30 && currentTime <= 35) {
     return true;
   }
   return false;
