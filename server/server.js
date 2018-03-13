@@ -1,7 +1,7 @@
 const http = require('http');
 const express = require('express');
 const socketIO = require('socket.io');
-
+const moment = require('moment');
 // const { mongoose } = require('./db/mongoose');
 
 const currencies = require('./config/currencies');
@@ -121,6 +121,117 @@ app.get('/historical/:symbol/:foreignExchange', (req, res) => {
         .equalTo(req.params.symbol)
         .once('value', data => {
           res.send(data.val());
+        });
+    }
+  } else {
+    res.status(404).send();
+  }
+});
+
+app.get('/data/:symbol/:foreignExchange/:timeRange', (req, res) => {
+  let todayTime = moment().startOf('day').unix() * 1000;
+  if (req.params.foreignExchange.toUpperCase() === 'MXN') {
+    currencies.refMexico
+      .orderByChild('symbol')
+      .equalTo(req.params.symbol.toUpperCase())
+      .once('value', data => {
+        let rawData = data.val();
+        let filteredData = {};
+        Object.keys(rawData).forEach(key => {
+          if (rawData[key].time >= todayTime) {
+            filteredData[key] = rawData[key];
+          }
+        });
+        res.send(filteredData);
+      });
+  } else if (
+    req.params.foreignExchange.toUpperCase() === 'ARS' &&
+    (req.params.symbol.toUpperCase() === 'BTC' ||
+      req.params.symbol.toUpperCase() === 'ETH')
+  ) {
+    currencies.refArgentina
+      .orderByChild('symbol')
+      .equalTo(req.params.symbol)
+      .once('value', data => {
+        let rawData = data.val();
+        let filteredData = {};
+        Object.keys(rawData).forEach(key => {
+          if (rawData[key].time >= todayTime) {
+            filteredData[key] = rawData[key];
+          }
+        });
+        res.send(filteredData);
+      });
+  } else if (req.params.foreignExchange.toUpperCase() === 'AUD') {
+    let sym = req.params.symbol.toUpperCase();
+    if (sym === 'BTC' || sym === 'ETC' || sym === 'BCH') {
+      currencies.refAustrailia
+        .orderByChild('symbol')
+        .equalTo(req.params.symbol)
+        .once('value', data => {
+          let rawData = data.val();
+          let filteredData = {};
+          Object.keys(rawData).forEach(key => {
+            if (rawData[key].time >= todayTime) {
+              filteredData[key] = rawData[key];
+            }
+          });
+          res.send(filteredData);
+        });
+    }
+  } else {
+    res.status(404).send();
+  }
+});
+
+app.get('/date-range/:symbol/:foreignExchange/:startingTimeStamp/:endingTimeStamp', (req, res) => {
+  if (req.params.foreignExchange.toUpperCase() === 'MXN') {
+    currencies.refMexico
+      .orderByChild('symbol')
+      .equalTo(req.params.symbol.toUpperCase())
+      .once('value', data => {
+        let rawData = data.val();
+        let filteredData = {};
+        Object.keys(rawData).forEach(key => {
+          if (rawData[key].time >= req.params.startingTimeStamp && rawData[key].time <= req.params.endingTimeStamp) {
+            filteredData[key] = rawData[key];
+          }
+        });
+        res.send(filteredData);
+      });
+  } else if (
+    req.params.foreignExchange.toUpperCase() === 'ARS' &&
+    (req.params.symbol.toUpperCase() === 'BTC' ||
+      req.params.symbol.toUpperCase() === 'ETH')
+  ) {
+    currencies.refArgentina
+      .orderByChild('symbol')
+      .equalTo(req.params.symbol)
+      .once('value', data => {
+        let rawData = data.val();
+        let filteredData = {};
+        Object.keys(rawData).forEach(key => {
+          if (rawData[key].time >= req.params.startingTimeStamp && rawData[key].time <= req.params.endingTimeStamp) {
+            filteredData[key] = rawData[key];
+          }
+        });
+        res.send(filteredData);
+      });
+  } else if (req.params.foreignExchange.toUpperCase() === 'AUD') {
+    let sym = req.params.symbol.toUpperCase();
+    if (sym === 'BTC' || sym === 'ETC' || sym === 'BCH') {
+      currencies.refAustrailia
+        .orderByChild('symbol')
+        .equalTo(req.params.symbol)
+        .once('value', data => {
+          let rawData = data.val();
+          let filteredData = {};
+          Object.keys(rawData).forEach(key => {
+            if (rawData[key].time >= req.params.startingTimeStamp && rawData[key].time <= req.params.endingTimeStamp) {
+              filteredData[key] = rawData[key];
+            }
+          });
+          res.send(filteredData);
         });
     }
   } else {

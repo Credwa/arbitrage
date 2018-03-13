@@ -38,27 +38,27 @@ const currencies = [
   {
     name: 'bitcoin',
     symbol: 'btc',
-    cron: '1,11,21,31,41,51 * * * *'
+    cron: '1,6,11,16,21,26,31,36,41,46,51,56 * * * *'
   },
   {
     name: 'ripple',
     symbol: 'xrp',
-    cron: '3,13,23,33,43,53 * * * *'
+    cron: '3,8,13,18,23,28,33,38,43,48,53,58 * * * *'
   },
   {
     name: 'ethereum',
     symbol: 'eth',
-    cron: '5,15,25,35,45,55 * * * *'
+    cron: '0,5,10,15,20,25,30,35,40,45,50,55 * * * *'
   },
   {
     name: 'bitcoin-cash',
     symbol: 'bch',
-    cron: '7,17,27,37,47,57 * * * *'
+    cron: '2,7,12,17,22,27,32,37,42,47,52,57 * * * *'
   },
   {
     name: 'litecoin',
     symbol: 'ltc',
-    cron: '9,19,29,39,49,59 * * * *'
+    cron: '4,9,14,19,24,29,34,39,44,49,54,59 * * * *'
   }
 ];
 
@@ -116,7 +116,7 @@ let checkCurrentTimeToStoreData = () => {
   // check if time is from 0 to 10 min of the hour and store data if true
   let now = moment();
   let currentTime = Number(now.format('m'));
-  if (currentTime >= 20 && currentTime <= 30) {
+  if (currentTime >= 30 && currentTime <= 40) {
     return true;
   }
   return false;
