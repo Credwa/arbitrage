@@ -1,6 +1,6 @@
-# Binance Trader Overlay Server
+# Arbitrage Server
 
-Server files for binance trader overlay. This handles eliot orders mainly
+Server files for Arbitrage-ui.
 
 ## Getting Started
 
@@ -57,7 +57,7 @@ Fill required variables in json file db_name can be anything the rest are found 
     "database_URL": "",
     "arbitrage_db_name": "",
     "private_key": "",
-    "project_id": "",
+    "project_id": ""
   }
 }
 ```
@@ -101,7 +101,7 @@ Nothing here for now.
 
 ## Authors
 
-* **Craig Edwards** - *Initial work* - [Credwa](https://github.com/credwa)
+* **Craig Edwards** - _Initial work_ - [Credwa](https://github.com/credwa)
 
 See also the list of [contributors](https://github.com/credwa/arbitrage/contributors) who participated in this project.
 

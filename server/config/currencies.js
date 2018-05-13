@@ -24,7 +24,9 @@ admin.initializeApp({
 const db = admin.database();
 let refArgentina = db.ref(`${process.env.arbitrage_db_name}/argentine-pesos`);
 let refMexico = db.ref(`${process.env.arbitrage_db_name}/mexican-pesos`);
-let refAustrailia = db.ref(`${process.env.arbitrage_db_name}/austrailian-dollar`);
+let refAustrailia = db.ref(
+  `${process.env.arbitrage_db_name}/austrailian-dollar`
+);
 
 // Mexican Peso
 let MXNPesoExchangeRate = null;
@@ -32,8 +34,10 @@ let MXNPesoExchangeRate = null;
 // Argentine Peso
 let ARSPesoExchangeRate = null;
 
+// Austrailian dollar
 let AUDExchangeRate = null;
 
+// Congigure timers for grabbing data
 const currencies = [
   {
     name: 'bitcoin',
@@ -96,12 +100,17 @@ let getLatestExchangeRates = () => {
       console.log(e);
     });
 
-  axios.get('https://transferwise.com/gb/currency-converter/usd-to-aud-rate?amount=1')
+  axios
+    .get(
+      'https://transferwise.com/gb/currency-converter/usd-to-aud-rate?amount=1'
+    )
     .then(data => {
       let $ = cheerio.load(data.data);
 
       let pull = $('h3.m-b-0 > .text-success')
-        .first().text().replace(' AUD', '');
+        .first()
+        .text()
+        .replace(' AUD', '');
       AUDExchangeRate = pull;
     });
 };
@@ -304,30 +313,33 @@ let makeReqARSExchangeRates = (symbol, coinMarketCapData) => {
 
 let makeReqAUDExchangeRates = (symbol, coinMarketCapData) => {
   if (symbol === 'btc' || symbol === 'eth' || symbol === 'bch') {
-    axios.get(`https://acx.io:443//api/v2/tickers/${symbol}aud.json`).then(data => {
-      let reqData = data.data;
-      if (checkCurrentTimeToStoreData()) {
-        refAustrailia.push(
+    axios
+      .get(`https://acx.io:443//api/v2/tickers/${symbol}aud.json`)
+      .then(data => {
+        let reqData = data.data;
+        if (checkCurrentTimeToStoreData()) {
+          refAustrailia.push(
+            setarbitrageData(
+              AUDExchangeRate,
+              coinMarketCapData,
+              reqData.ticker.last,
+              'Austrailian Dollars',
+              'acx.io'
+            )
+          );
+        } else {
           setarbitrageData(
             AUDExchangeRate,
             coinMarketCapData,
             reqData.ticker.last,
             'Austrailian Dollars',
             'acx.io'
-          )
-        );
-      } else {
-        setarbitrageData(
-          AUDExchangeRate,
-          coinMarketCapData,
-          reqData.ticker.last,
-          'Austrailian Dollars',
-          'acx.io'
-        );
-      }
-    }).catch(e => {
-      console.log(e);
-    });
+          );
+        }
+      })
+      .catch(e => {
+        console.log(e);
+      });
   }
 };
 
