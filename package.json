@@ -23,7 +23,8 @@
     "node-binance-api": "^0.4.5",
     "node-cron": "^1.2.1",
     "socket.io": "^2.0.4",
-    "socket.io-client": "^2.0.4"
+    "socket.io-client": "^2.0.4",
+    "twilio": "^3.17.1"
   },
   "devDependencies": {
     "eslint": "^4.16.0",

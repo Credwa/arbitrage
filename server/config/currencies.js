@@ -1,5 +1,5 @@
 require('./config.js');
-
+const https = require('https');
 const cron = require('node-cron');
 const axios = require('axios');
 const admin = require('firebase-admin');
@@ -21,12 +21,15 @@ admin.initializeApp({
   databaseURL: process.env.database_URL
 });
 
+// import alerts after init
+const userAlerts = require('./user-alerts');
 const db = admin.database();
 let refArgentina = db.ref(`${process.env.arbitrage_db_name}/argentine-pesos`);
 let refMexico = db.ref(`${process.env.arbitrage_db_name}/mexican-pesos`);
 let refAustrailia = db.ref(
   `${process.env.arbitrage_db_name}/austrailian-dollar`
 );
+let refLatest = db.ref(`${process.env.arbitrage_db_name}/latest-arbs`);
 
 // Mexican Peso
 let MXNPesoExchangeRate = null;
@@ -36,6 +39,15 @@ let ARSPesoExchangeRate = null;
 
 // Austrailian dollar
 let AUDExchangeRate = null;
+
+const shortenCurrencyName = value => {
+  if (value === 'Mexican Pesos') {
+    return 'MXN';
+  } else if (value === 'Argentine Pesos') {
+    return 'ARS';
+  }
+  return 'AUD';
+};
 
 // Congigure timers for grabbing data
 const currencies = [
@@ -65,10 +77,14 @@ const currencies = [
     cron: '4,9,14,19,24,29,34,39,44,49,54,59 * * * *'
   }
 ];
-
 let getLatestExchangeRates = () => {
+  const agent = new https.Agent({
+    rejectUnauthorized: false
+  });
   axios
-    .get('https://www.hsbc.com.mx/1/2/es/personas/divisas')
+    .get('https://www.hsbc.com.mx/1/2/es/personas/divisas', {
+      httpsAgent: agent
+    })
     .then(data => {
       let $ = cheerio.load(data.data);
       // console.log($.xml());
@@ -116,11 +132,13 @@ let getLatestExchangeRates = () => {
 };
 
 getLatestExchangeRates();
-
+userAlerts.getUIDsWithAlertsEnabled();
 cron.schedule('*/3 * * * *', () => {
   getLatestExchangeRates();
 });
-
+cron.schedule('*/1 * * * *', () => {
+  userAlerts.getUsersWithAlertsEnabled();
+});
 let checkCurrentTimeToStoreData = () => {
   // check if time is from 0 to 10 min of the hour and store data if true
   let now = moment();
@@ -192,6 +210,19 @@ let setarbitrageData = (
   );
   arbitrage.time = moment.now();
   myEmitter.emit('newArbitrage', arbitrage);
+
+  refLatest
+    .child(
+      `${arbitrage.symbol}-${shortenCurrencyName(arbitrage.foreignCurrency)}`
+    )
+    .set(JSON.parse(JSON.stringify(arbitrage)));
+  userAlerts.getUIDsWithAlertsEnabled().forEach(uid => {
+    userAlerts.compareUserAlertToNewArb(
+      uid,
+      `${arbitrage.symbol}-${shortenCurrencyName(arbitrage.foreignCurrency)}`,
+      arbitrage
+    );
+  });
   return arbitrage;
 };
 
@@ -375,5 +406,6 @@ module.exports = {
   myEmitter,
   refArgentina,
   refMexico,
-  refAustrailia
+  refAustrailia,
+  refLatest
 };
